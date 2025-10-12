@@ -1,2 +1,5 @@
 .venv/
 datasets/
+__pycache__/
+wandb/
+outputs/
