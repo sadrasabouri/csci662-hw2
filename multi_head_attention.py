@@ -92,9 +92,10 @@ def self_attention(Q, K, V, n_heads=1, causal=True):
     A = pairwise_similarities(Q, K)
     A = attn_scaled(A, n_embd, n_heads)
 
-    # TODO: Step 2 -- create and apply the causal mask to attention.
+    # Step 2 -- create and apply the causal mask to attention.
     if causal:
-        raise NotImplementedError  # remove this line when you finish this block of code
+        mask = make_causal_mask(n_tok)
+        A = apply_causal_mask(mask, A)
 
     # Step 1 -- softmax the raw attention and use it to get outputs.
     # Hint: you need two lines here.
@@ -156,16 +157,18 @@ def make_causal_mask(n_tok:int):
     """
     # Hint: In order for your experiments to work properly later, you'll need to put `.to(DEVICE)` at
     # the end of your expression for this. This will not be relevant until section 2.2.
-    # TODO: implement
-    pass
+    mask = torch.tril(torch.ones(n_tok, n_tok, dtype=bool)).logical_not().to(DEVICE) # upper triangular True (not the diagonal)
+    # [sadra] TODO: try adding the diagonal too
+    return mask
 
 def apply_causal_mask(mask, A):
     """
     Apply mask to attention.
     :return: A masked attention matrix.
     """
-    # TODO: implement
-    pass
+    A = torch.masked_fill(A, mask, float('-inf')) # fill masked positions with -inf
+    # if we mask softmax output to zero instead the output may not sum to 1
+    return A
 
 # Step 3: Implement multi-head attention.
 
@@ -241,4 +244,5 @@ def test_all():
 
 # run this file as a script to test your whole implementation
 if __name__ == "__main__":
+    DEVICE = "cpu"
     test_all()
