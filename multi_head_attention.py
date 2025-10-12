@@ -83,9 +83,10 @@ def self_attention(Q, K, V, n_heads=1, causal=True):
     K = K.to(DEVICE)
     V = V.to(DEVICE)
 
-    # TODO: Step 3 -- split heads.
+    # Step 3 -- split heads.
     if n_heads > 1:
-        raise NotImplementedError  # remove this line when you finish this block of code
+        Q, K, V = split_heads_qkv(Q, K, V, n_heads)
+        assert K.size() == V.size() == Q.size() # should all be (B, n_heads, n_tok, n_embd / n_heads)
 
     # Step 1 -- calculate raw attetion.
     # Hint: you need two lines here.
@@ -102,10 +103,9 @@ def self_attention(Q, K, V, n_heads=1, causal=True):
     A = attn_softmax(A)
     y = compute_outputs(A, V)
 
-    # TODO: Step 3 -- merge heads.
+    # Step 3 -- merge heads.
     if n_heads > 1:
-        raise NotImplementedError # remove this line when you finish this block of code
-
+        y = merge_heads(y)
 
     # output should have the same shape as input
     assert y.shape == (B, n_tok, n_embd), f"output shape should be {y.shape}, but is actually {(B, n_tok, n_embd)}"
@@ -185,17 +185,22 @@ def split_heads(x, n_heads:int):
     """
     B, n_tok, n_embd = x.size()
     assert n_embd % n_heads == 0, "d must be divisible by number of heads"
-    # TODO: implement
-    pass
+    n_embd_h = n_embd // n_heads
+    # using view make it split the last dimension into (n_heads, n_embd_h)
+    # torch.view was not showing properly in my IDE so I used view_copy which is the same thing we we're overriding
+    x = torch.view_copy(x, (B, n_tok, n_heads, n_embd_h))  # (B, n_tok, n_heads, n_embd_h)
+    x = torch.transpose(x, 1, 2)  # (B, n_heads, n_tok, n_embd_h)
+    return x
 
 def merge_heads(y):
     """
     Reversing splitting action of y.
     :return: A merged y.
     """
-    B, nh, n_tok, nc = y.size()
-    # TODO: implement
-    pass
+    B, nh, n_tok, n_embd_h = y.size()
+    y = torch.transpose(y, 1, 2)  # (B, n_tok, n_heads, n_embd_h)
+    y = torch.view_copy(y, (B, n_tok, -1))  # (B, n_tok, n_embd)
+    return y
 
 # testing functions for your convenience
 # autograder won't call these directly, but this is basically what it will do
