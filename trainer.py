@@ -31,13 +31,16 @@ class Trainer:
         C.grad_norm_clip = 1.0
         return C
 
-    def __init__(self, config, model, train_dataset, labels=None):
+    def __init__(self, config, model, train_dataset, dev_dataset, labels=None, labels_dev=None, validation_interval=250):
         self.config = config
         self.model = model
         self.optimizer = None
         self.train_dataset = train_dataset
+        self.dev_dataset = dev_dataset
         self.callbacks = defaultdict(list)
         self.labels = labels # added for CSCI 662 - classification labels
+        self.labels_dev = labels_dev # added for CSCI 662 - classification labels
+        self.validation_interval = validation_interval
 
         # determine the device we'll train on
         if config.device == 'auto':
@@ -88,17 +91,29 @@ class Trainer:
         if self.labels is not None:
             # classification
             dataset = torch.utils.data.TensorDataset(self.train_dataset, self.labels)
+            dev_dataset = torch.utils.data.TensorDataset(self.dev_dataset, self.labels_dev)
         else:
             # language modeling
             # X is all but last token, Y is all but first token
             X = self.train_dataset[:, :-1]
             Y = self.train_dataset[:, 1:]
             dataset = torch.utils.data.TensorDataset(X, Y)
-        
+            X_dev = self.dev_dataset[:, :-1]
+            Y_dev = self.dev_dataset[:, 1:]
+            dev_dataset = torch.utils.data.TensorDataset(X_dev, Y_dev)
+
         # setup the dataloader
         train_loader = DataLoader(
             dataset,
             sampler=torch.utils.data.RandomSampler(self.train_dataset, replacement=True, num_samples=int(1e10)),
+            shuffle=False,
+            pin_memory=True,
+            batch_size=config.batch_size,
+            num_workers=config.num_workers,
+        )
+        dev_loader = DataLoader(
+            dev_dataset,
+            sampler=torch.utils.data.SequentialSampler(dev_dataset),
             shuffle=False,
             pin_memory=True,
             batch_size=config.batch_size,
@@ -144,6 +159,30 @@ class Trainer:
                 # do language modeling loss
                 loss = self.lm_loss
                 self.wandb_run.log({"lm_loss": self.lm_loss})
+            
+            if self.iter_num % self.validation_interval == 0:
+                model.eval()
+                total_val_loss = 0.0
+                total_val_batches = 0
+                with torch.no_grad():
+                    for val_batch in dev_loader:
+                        val_batch = [t.to(self.device) for t in val_batch]
+                        x_val, y_val = val_batch
+                        if self.labels is not None:
+                            # classification
+                            _, _, _, val_classification_loss = model(x_val, classification_targets=y_val)
+                            total_val_loss += val_classification_loss.item()
+                        else:
+                            # language modeling
+                            _, val_lm_loss, _, _ = model(x_val, targets=y_val)
+                            total_val_loss += val_lm_loss.item()
+                        total_val_batches += 1
+                avg_val_loss = total_val_loss / total_val_batches
+                if self.labels is not None:
+                    self.wandb_run.log({"validation_classification_loss": avg_val_loss})
+                else:
+                    self.wandb_run.log({"validation_lm_loss": avg_val_loss})
+                model.train()
 
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), config.grad_norm_clip)

@@ -22,10 +22,15 @@ def get_arguments():
                         default='pretrain')
     parser.add_argument("-i", help="path of the input file where training file is in the form <text>TAB<label> for finetuning, or text separated by newlines for pretraining",
                         default='datasets/1b_benchmark.train.tokens')
+    parser.add_argument("-v", help="path of the input file where development file is in the form <text>TAB<label> for finetuning, or text separated by newlines for pretraining",
+                        default='datasets/1b_benchmark.dev.tokens')
+    parser.add_argument("--validation_interval", help="number of training iterations between each validation step", type=int, default=250)
     parser.add_argument("-p", help="path of pretrained model (if not starting from scratch)",
                         default=None)
     parser.add_argument("-o", help="path of the file where the model is saved", default='best.pretrain.model')
     parser.add_argument("-d", action="store_true", help="pass this flag to train on a small dummy input (use for debugging). works for LM task only.", default=False)
+    parser.add_argument("-b", help="number of batch size to use for training", type=int, default=32)
+    parser.add_argument("-n", help="number of training epochs to run", type=int, default=1)
 
     return parser.parse_args()
 
@@ -37,9 +42,12 @@ if __name__ == "__main__":
 
     if args.d:
       lines = ["this is a dummy sentence."] * 1000
+      lines_dev = ["this is a dummy sentence."] * 200
     else:
         with open(args.i) as f:
             lines = [line.strip() for line in f if line.strip()]
+        with open(args.v) as f:
+            lines_dev = [line.strip() for line in f if line.strip()]
 
     if args.t == "finetune":
         # do finetuning
@@ -56,16 +64,26 @@ if __name__ == "__main__":
         tokenized = [tokenizer(line.split('\t')[0]) for line in lines]  # tokenize only the text part
         num_classes = len(label2id)
 
+        for i, line in enumerate(lines_dev):
+            if '\t' not in line:
+                print(i)
+        labels_dev = [line.split('\t')[1] for line in lines_dev]
+        labels_dev = torch.tensor([label2id[line.split('\t')[1]] for line in lines_dev], dtype=torch.long) # map label to id
+        tokenized_dev = [tokenizer(line.split('\t')[0]) for line in lines_dev]  # tokenize only the text part
+
     else:
         # do pretraining - language modeling only
         # do tokenization
         tokenized = [tokenizer(line)[0] for line in lines]  # [0] removes batch dim
+        tokenized_dev = [tokenizer(line)[0] for line in lines_dev]  # [0] removes batch dim
         labels = None
+        labels_dev = None
         num_classes = 0
     
     # pad sequences to same length
     max_len = 100  # we have not tuned this - you are encouraged to experiment
     padded = torch.tensor([pad_to_length(t.squeeze(0).tolist(), max_len, tokenizer.pad_id) for t in tokenized], dtype=torch.long)
+    padded_dev = torch.tensor([pad_to_length(t.squeeze(0).tolist(), max_len, tokenizer.pad_id) for t in tokenized_dev], dtype=torch.long)
         
     # set up model and Trainer
     model_config = GPT.get_default_config()
@@ -106,12 +124,12 @@ if __name__ == "__main__":
 
     # We didn't tune the hyperparameters at all, please experiment with these!
     train_config.learning_rate = 5e-4
-    train_config.batch_size = 32
+    train_config.batch_size = args.b
     # TODO you should probably increase this
-    train_config.max_iters = len(tokenized) // train_config.batch_size  # train for 1 epoch
+    train_config.max_iters = args.n * len(tokenized) // train_config.batch_size  # train for 1 epoch
     # train_config.max_iters = 1 # uncomment this for quick debugging
 
-    trainer = Trainer(train_config, model, padded, labels)
+    trainer = Trainer(train_config, model, padded, padded_dev, labels, labels_dev, args.validation_interval)
 
     # run training
     model.to(DEVICE)
