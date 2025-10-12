@@ -1,3 +1,4 @@
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -82,19 +83,19 @@ def self_attention(Q, K, V, n_heads=1, causal=True):
     if n_heads > 1:
         raise NotImplementedError  # remove this line when you finish this block of code
 
-    # TODO: Step 1 -- calculate raw attetion.
+    # Step 1 -- calculate raw attetion.
     # Hint: you need two lines here.
-    A = None
-    A = None
+    A = pairwise_similarities(Q, K)
+    A = attn_scaled(A, n_embd, n_heads)
 
     # TODO: Step 2 -- create and apply the causal mask to attention.
     if causal:
         raise NotImplementedError  # remove this line when you finish this block of code
 
-    # TODO: Step 1 -- softmax the raw attention and use it to get outputs.
+    # Step 1 -- softmax the raw attention and use it to get outputs.
     # Hint: you need two lines here.
-    A = None
-    y = None
+    A = attn_softmax(A)
+    y = compute_outputs(A, V)
 
     # TODO: Step 3 -- merge heads.
     if n_heads > 1:
@@ -113,8 +114,8 @@ def pairwise_similarities(Q, K):
     Dot product attention is computed via the dot product between each query and each key.
     :return: The raw attention scores, A = QK^T.
     """
-    # TODO: implement
-    pass
+    K_T = torch.transpose(K, -2, -1) # swap n_tok and n_embd only
+    return Q @ K_T
 
 def attn_scaled(A, n_embd:float, n_heads:float):
     """
@@ -122,8 +123,8 @@ def attn_scaled(A, n_embd:float, n_heads:float):
     :return: Scaled raw attention scores.
     """
     assert n_embd % n_heads == 0, "d must be divisible by number of heads"
-    # TODO: implement
-    pass
+    _denom = math.sqrt(n_embd // n_heads)
+    return A / _denom
 
 def attn_softmax(A):
     """
@@ -133,16 +134,14 @@ def attn_softmax(A):
     You are allowed (and encouraged) to use a pytorch softmax implementation here.
     """
     # Hint: the softmax function should be applied to dim=-1.
-    # TODO: implement
-    pass
+    return F.softmax(A, dim=-1)
 
 def compute_outputs(A, V):
     """
     Get outputs as a weighted sum of values by attention scores, using matrices.
     :return: Output, O = AV.
     """
-    # TODO: implement
-    pass
+    return A @ V
 
 # Step 2: Implement causal masking for language modeling.
 
@@ -238,5 +237,4 @@ def test_all():
 
 # run this file as a script to test your whole implementation
 if __name__ == "__main__":
-    DEVICE = 'cpu'
     test_all()
