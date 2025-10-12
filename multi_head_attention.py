@@ -2,7 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+if torch.cuda.is_available():
+    DEVICE = "cuda"
+elif torch.backends.mps.is_available():  # only works on macOS
+    DEVICE = "mps"
+else:
+    DEVICE = "cpu"
+print(f"PyTorch version: {torch.__version__} on {DEVICE}")
 
 # wrapper for Torch attention implementation - do not modify
 def MHA_wrapper(query, key, value, n_heads=1, causal=False):
