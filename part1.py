@@ -51,7 +51,7 @@ def problem_3():
 
     # we should make a'i = 1/4 hence a = 0 this means that the query vector should be orthogonal to all key vectors
     # one cheat that can do this is to use null vector which has zero dot product with all vectors :)
-    query_3 = torch.zeros_like(key)
+    query_3 = torch.zeros_like(key[0]).unsqueeze(0)
 
     # here scaling would mess with the average vector so we don't scale
 
