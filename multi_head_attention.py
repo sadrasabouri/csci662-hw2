@@ -78,6 +78,10 @@ def self_attention(Q, K, V, n_heads=1, causal=True):
     """
     assert Q.shape == K.shape == V.shape
     B, n_tok, n_embd = Q.size()
+    # moving the matrices to the device
+    Q = Q.to(DEVICE)
+    K = K.to(DEVICE)
+    V = V.to(DEVICE)
 
     # TODO: Step 3 -- split heads.
     if n_heads > 1:
