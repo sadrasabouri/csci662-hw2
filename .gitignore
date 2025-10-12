@@ -1,5 +1,7 @@
 .venv/
-datasets/
+datasets/*
+!datasets/.gitkeep
 __pycache__/
 wandb/
-outputs/
+outputs/*
+!outputs/.gitkeep
