@@ -5,7 +5,7 @@ so nothing in this file really has anything to do with GPT specifically.
 This file is from Andrej Karpathy's MinGPT.
 https://github.com/karpathy/minGPT
 """
-
+import wandb
 import time
 from collections import defaultdict
 
@@ -51,6 +51,22 @@ class Trainer:
         self.iter_num = 0
         self.iter_time = 0.0
         self.iter_dt = 0.0
+
+        self.wandb_run = wandb.init(
+            entity="sabourih-usc",
+            project="csci662-fall2024_hw2",
+            config={
+                "task": config.get("task"),
+                "device": config.get("device"),
+                "num_workers": config.get("num_workers"),
+                "max_iters": config.get("max_iters"),
+                "batch_size": config.get("batch_size"),
+                "learning_rate": config.get("learning_rate"),
+                "betas": config.get("betas"),
+                "weight_decay": config.get("weight_decay"),
+                "grad_norm_clip": config.get("grad_norm_clip"),
+            },
+        )
 
     def add_callback(self, onevent: str, callback):
         self.callbacks[onevent].append(callback)
@@ -109,9 +125,11 @@ class Trainer:
                 # classification
                 self.logits, self.lm_loss, self.classification_logits, self.classification_loss = model(x, classification_targets=y)
                 print(self.classification_loss)
+                self.wandb_run.log({"classification_loss": self.classification_loss})
             else:
                 # language modeling
                 self.logits, self.lm_loss, self.classification_logits, self.classification_loss = model(x, targets=y)
+                self.wandb_run.log({"lm_loss": self.lm_loss})
 
 
             # backprop and update the parameters
@@ -121,9 +139,11 @@ class Trainer:
                 # do classification loss
                 loss = self.classification_loss
                 self.batch_labels = y
+                self.wandb_run.log({"classification_loss": self.classification_loss})
             else:
                 # do language modeling loss
                 loss = self.lm_loss
+                self.wandb_run.log({"lm_loss": self.lm_loss})
 
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), config.grad_norm_clip)
@@ -138,3 +158,4 @@ class Trainer:
             # termination conditions
             if config.max_iters is not None and self.iter_num >= config.max_iters:
                 break
+        self.wandb_run.finish()
