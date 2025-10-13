@@ -31,6 +31,7 @@ def get_arguments():
     parser.add_argument("-d", action="store_true", help="pass this flag to train on a small dummy input (use for debugging). works for LM task only.", default=False)
     parser.add_argument("-b", help="number of batch size to use for training", type=int, default=32)
     parser.add_argument("-n", help="number of training epochs to run", type=int, default=1)
+    parser.add_argument("-lr", help="learning rate to use for training", type=float, default=5e-4)
 
     return parser.parse_args()
 
@@ -123,10 +124,11 @@ if __name__ == "__main__":
     train_config.num_workers = 2
 
     # We didn't tune the hyperparameters at all, please experiment with these!
-    train_config.learning_rate = 5e-4
+    train_config.learning_rate = args.lr
     train_config.batch_size = args.b
     # TODO you should probably increase this
     train_config.max_iters = args.n * len(tokenized) // train_config.batch_size  # train for 1 epoch
+    train_config.task = f"{args.t}-c={num_classes}"
     # train_config.max_iters = 1 # uncomment this for quick debugging
 
     trainer = Trainer(train_config, model, padded, padded_dev, labels, labels_dev, args.validation_interval)
