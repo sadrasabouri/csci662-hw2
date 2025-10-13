@@ -73,7 +73,7 @@ class Trainer:
                 "n_epochs": config.get("n_epochs"),
                 "pretrained_model": config.get("pretrained_model")
             },
-            name=f"{config.get('task')}-{config.get('input_file')}-bs{config.get('batch_size')}-lr{config.get('learning_rate')}-n{config.get('n_epochs')}_pt{config.get('pretrained_model')}"
+            name=f"{config.get('input_file')}_pt{config.get('pretrained_model')}"
         )
 
     def add_callback(self, onevent: str, callback):
