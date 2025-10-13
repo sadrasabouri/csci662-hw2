@@ -129,6 +129,8 @@ if __name__ == "__main__":
     # TODO you should probably increase this
     train_config.max_iters = args.n * len(tokenized) // train_config.batch_size  # train for 1 epoch
     train_config.task = f"{args.t}-c={num_classes}"
+    train_config.validation_interval = args.validation_interval
+    train_config.input_file = args.i
     # train_config.max_iters = 1 # uncomment this for quick debugging
 
     trainer = Trainer(train_config, model, padded, padded_dev, labels, labels_dev, args.validation_interval)

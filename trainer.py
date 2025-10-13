@@ -68,6 +68,8 @@ class Trainer:
                 "betas": config.get("betas"),
                 "weight_decay": config.get("weight_decay"),
                 "grad_norm_clip": config.get("grad_norm_clip"),
+                "input_file": config.get("input_file"),
+                "validation_interval": config.get("validation_interval"),
             },
         )
 
