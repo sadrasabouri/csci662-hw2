@@ -131,6 +131,8 @@ if __name__ == "__main__":
     train_config.task = f"{args.t}-c={num_classes}"
     train_config.validation_interval = args.validation_interval
     train_config.input_file = args.i
+    train_config.n_epochs = args.n
+    train_config.pretrained_model = args.p if args.p is not None else "None"
     # train_config.max_iters = 1 # uncomment this for quick debugging
 
     trainer = Trainer(train_config, model, padded, padded_dev, labels, labels_dev, args.validation_interval)

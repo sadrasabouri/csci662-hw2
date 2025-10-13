@@ -70,7 +70,10 @@ class Trainer:
                 "grad_norm_clip": config.get("grad_norm_clip"),
                 "input_file": config.get("input_file"),
                 "validation_interval": config.get("validation_interval"),
+                "n_epochs": config.get("n_epochs"),
+                "pretrained_model": config.get("pretrained_model")
             },
+            name=f"{config.get('task')}-{config.get('input_file')}-bs{config.get('batch_size')}-lr{config.get('learning_rate')}-n{config.get('n_epochs')}_pt{config.get('pretrained_model')}"
         )
 
     def add_callback(self, onevent: str, callback):
