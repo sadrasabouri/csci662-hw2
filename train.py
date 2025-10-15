@@ -113,12 +113,12 @@ if __name__ == "__main__":
     model_config.block_size = 1024
 
     # Use the attention function you implemented in the last part
-    model_config.attn_init_fn = lambda n_embed: init_qkv_proj(n_embed, args.attention_init) # we implemented this for you
     attention_config = {
         'attention_init': args.attention_init,
         'sim_method': args.attention_sm,
         'shared_weights': args.attention_sw,
     }
+    model_config.attn_init_fn = lambda n_embed: init_qkv_proj(n_embed, attention_config) # we implemented this for you
     model_config.attn_fn = lambda Q, K, V, n_heads, causal: self_attention(Q, K, V, n_heads=n_heads, causal=causal, config=attention_config) # you implemented this
 
     # handle num classes for classification

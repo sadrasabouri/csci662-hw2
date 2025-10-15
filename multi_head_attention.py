@@ -57,11 +57,12 @@ def set_up_tests():
 
     return part1_key, part1_query, part1_value
 
-def init_qkv_proj(n_embd:int, initialization_mode:str="nn.Linear"):
+def init_qkv_proj(n_embd:int, config:dict=None):
     """
     This function is given to you.
     :return: A tuple of length 3 containing the projections for Q, K, V.
     """
+    initialization_mode = config['attention_init']
     q_proj, k_proj, v_proj = nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd) 
     if initialization_mode == "orthogonal":
         nn.init.orthogonal_(q_proj.weight)
