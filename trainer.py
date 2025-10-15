@@ -56,11 +56,12 @@ class Trainer:
         self.iter_dt = 0.0
 
         model_name = config.output_file.split('/')[-1]
-        dataset_name = config.input_file.split('/')[-1]
         pt_model_name = config.get('pretrained_model', '/').split('/')[-1]
         if config.task == 'pretrain':
+            dataset_name = config.input_file.split('/')[-1]
             wandb_report_name = f"pretrain[{model_name},{dataset_name},{config.model_type},lr{config.get('learning_rate')},n{config.get('n_epochs')},b{config.get('batch_size')}]"
         else:
+            dataset_name = "_".join(config.input_file.split('/')[-2:])
             wandb_report_name = f"ft-{dataset_name}[{pt_model_name},lr{config.get('learning_rate')},n{config.get('n_epochs')},b{config.get('batch_size')}]"
         self.wandb_run = wandb.init(
             entity="sabourih-usc",
