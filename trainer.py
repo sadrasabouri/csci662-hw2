@@ -204,5 +204,5 @@ class Trainer:
                 break
             # save at the each epoch
             if self.iter_num % config.iterations_per_epoch:
-                torch.save(model.state_dict(), f'{config.o}.{self.iter_num // config.iterations_per_epoch}.model')
+                torch.save(model.state_dict(), f'{config.output_file}.{self.iter_num // config.iterations_per_epoch}.model')
         self.wandb_run.finish()
