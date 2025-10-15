@@ -106,6 +106,11 @@ def eval_perplexity(data, model, tokenizer, bs=32, progress=True, pad_to_len=100
     # return mean perplexity over dataset
     return np.mean(np.exp(out))
 
+def infer_from_name(name:str, options: list[str]):
+    for item in options:
+        if item in name:
+            return item
+
 def main(args):
     # load model
     tokenizer = BPETokenizer()
@@ -120,8 +125,14 @@ def main(args):
     model_config.block_size = 1024
 
     # Use the attention function you implemented in the last part
-    model_config.attn_init_fn = init_qkv_proj # we implemented this for you
-    model_config.attn_fn = self_attention # you implemented this
+    attention_config = {
+        'attention_init': infer_from_name(args.m, ['nn.Linear', 'orthogonal', 'identity_bias']),
+        'sim_method': infer_from_name(args.m, ['dot_prod', 'cosine', 'avg', 'l2', 'correlation']),
+        'shared_weights': infer_from_name(args.m, ['QK', 'QV', 'KV', 'QKV']),
+        'attention_pnl': infer_from_name(args.m, ['tanh', 'relu', 'sigmoid']),
+    }
+    model_config.attn_init_fn = lambda n_embed: init_qkv_proj(n_embed, attention_config) # we implemented this for you
+    model_config.attn_fn = lambda Q, K, V, n_heads, causal: self_attention(Q, K, V, n_heads=n_heads, causal=causal, config=attention_config) # you implemented this
 
     # try to guess number of classes from model name
     num_classes = 0
@@ -139,6 +150,7 @@ def main(args):
             exit(1)
 
     model_config.num_classes = num_classes
+    model_config.model_type = infer_from_name(args.m, ['gpt-mini', 'gpt-micro', 'gpt-nano'])
 
     model = GPT(model_config)
     model.load_state_dict(torch.load(args.m, map_location=DEVICE))
