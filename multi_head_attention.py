@@ -57,13 +57,34 @@ def set_up_tests():
 
     return part1_key, part1_query, part1_value
 
-def init_qkv_proj(n_embd:int):
+def init_qkv_proj(n_embd:int, initialization_mode:str="nn.Linear"):
     """
     This function is given to you.
     :return: A tuple of length 3 containing the projections for Q, K, V.
     """
-    return (nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd))
+    q_proj, k_proj, v_proj = nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd) 
+    if initialization_mode == "orthogonal":
+        nn.init.orthogonal_(q_proj.weight)
+        nn.init.orthogonal_(k_proj.weight)
+        nn.init.orthogonal_(v_proj.weight)
+        nn.init.zeros_(q_proj.bias)
+        nn.init.zeros_(k_proj.bias)
+        nn.init.zeros_(v_proj.bias)
+        return (q_proj, k_proj, v_proj)
+    elif initialization_mode == "identity_bias":
+        nn.init.eye_(q_proj.weight)
+        nn.init.eye_(k_proj.weight)
+        nn.init.eye_(v_proj.weight)        
+        # Add small random noise
+        with torch.no_grad():
+            q_proj.weight.add_(torch.randn_like(q_proj.weight) * 0.01)
+            k_proj.weight.add_(torch.randn_like(k_proj.weight) * 0.01)
+            v_proj.weight.add_(torch.randn_like(v_proj.weight) * 0.01)
+        nn.init.zeros_(q_proj.bias)
+        nn.init.zeros_(k_proj.bias)
+        nn.init.zeros_(v_proj.bias)
 
+    return (q_proj, k_proj, v_proj)
 
 def self_attention(Q, K, V, n_heads=1, causal=True):
     """

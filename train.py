@@ -33,6 +33,9 @@ def get_arguments():
     parser.add_argument("-n", help="number of training epochs to run", type=int, default=1)
     parser.add_argument("-lr", help="learning rate to use for training", type=float, default=5e-4)
 
+    # attention improvement arguments - step 4
+    parser.add_argument("--attention_init", help="Q, K, V matrices initialization methods (nn.Linear, orthogonal, identity_bias)", type=str, default='nn.Linear')
+
     return parser.parse_args()
 
 
@@ -107,7 +110,7 @@ if __name__ == "__main__":
     model_config.block_size = 1024
 
     # Use the attention function you implemented in the last part
-    model_config.attn_init_fn = init_qkv_proj # we implemented this for you
+    model_config.attn_init_fn = lambda n_embed: init_qkv_proj(n_embed, args.attention_init) # we implemented this for you
     model_config.attn_fn = self_attention # you implemented this
 
     # handle num classes for classification
