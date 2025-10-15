@@ -133,7 +133,8 @@ if __name__ == "__main__":
     # TODO you should probably increase this
     train_config.max_iters = args.n * len(tokenized) // train_config.batch_size  # train for n epoch
     train_config.iterations_per_epoch = len(tokenized) // train_config.batch_size
-    train_config.task = f"{args.t}-c={num_classes}"
+    train_config.task = args.t
+    train_config.model_type = args.model_type
     train_config.validation_interval = args.validation_interval
     train_config.input_file = args.i
     train_config.output_file = args.o

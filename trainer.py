@@ -55,6 +55,12 @@ class Trainer:
         self.iter_time = 0.0
         self.iter_dt = 0.0
 
+        model_name = config.output_file.split('/')[-1]
+        dataset_name = config.input_file.split('/')[-1]
+        if config.task == 'pretrain':
+            wandb_report_name = f"pretrain[{model_name},{dataset_name},{config.model_type},lr{config.get('learning_rate')},n{config.get('n_epochs')},b{config.get("batch_size")}]"
+        else:
+            wandb_report_name = f"{config.get("pretrained_model")}ft-{dataset_name}[lr{config.get('learning_rate')},n{config.get('n_epochs')},b{config.get("batch_size")}]"
         self.wandb_run = wandb.init(
             entity="sabourih-usc",
             project="csci662-fall2024_hw2",
@@ -73,7 +79,7 @@ class Trainer:
                 "n_epochs": config.get("n_epochs"),
                 "pretrained_model": config.get("pretrained_model")
             },
-            name=f"{config.get('input_file')}_pt{config.get('pretrained_model')}_lr{config.get('learning_rate')}_n{config.get('n_epochs')}"
+            name=wandb_report_name
         )
 
     def add_callback(self, onevent: str, callback):
