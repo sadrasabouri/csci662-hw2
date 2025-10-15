@@ -58,9 +58,9 @@ class Trainer:
         model_name = config.output_file.split('/')[-1]
         dataset_name = config.input_file.split('/')[-1]
         if config.task == 'pretrain':
-            wandb_report_name = f"pretrain[{model_name},{dataset_name},{config.model_type},lr{config.get('learning_rate')},n{config.get('n_epochs')},b{config.get("batch_size")}]"
+            wandb_report_name = f"pretrain[{model_name},{dataset_name},{config.model_type},lr{config.get('learning_rate')},n{config.get('n_epochs')},b{config.get('batch_size')}]"
         else:
-            wandb_report_name = f"{config.get("pretrained_model")}ft-{dataset_name}[lr{config.get('learning_rate')},n{config.get('n_epochs')},b{config.get("batch_size")}]"
+            wandb_report_name = f"{config.get('pretrained_model')}ft-{dataset_name}[lr{config.get('learning_rate')},n{config.get('n_epochs')},b{config.get('batch_size')}]"
         self.wandb_run = wandb.init(
             entity="sabourih-usc",
             project="csci662-fall2024_hw2",
