@@ -127,10 +127,12 @@ if __name__ == "__main__":
     train_config.learning_rate = args.lr
     train_config.batch_size = args.b
     # TODO you should probably increase this
-    train_config.max_iters = args.n * len(tokenized) // train_config.batch_size  # train for 1 epoch
+    train_config.max_iters = args.n * len(tokenized) // train_config.batch_size  # train for n epoch
+    train_config.iterations_per_epoch = len(tokenized) // train_config.batch_size
     train_config.task = f"{args.t}-c={num_classes}"
     train_config.validation_interval = args.validation_interval
     train_config.input_file = args.i
+    train_config.output_file = args.o
     train_config.n_epochs = args.n
     train_config.pretrained_model = args.p if args.p is not None else "None"
     # train_config.max_iters = 1 # uncomment this for quick debugging
@@ -157,9 +159,4 @@ if __name__ == "__main__":
     trainer.run()
     bar.close()
 
-    torch.save(model.state_dict(), args.o)
-
-
-
-
-
+    torch.save(model.state_dict(), f'{args.o}.model')
