@@ -110,6 +110,7 @@ def infer_from_name(name:str, options: list[str]):
     for item in options:
         if item in name:
             return item
+    return None
 
 def main(args):
     # load model
@@ -125,12 +126,20 @@ def main(args):
     model_config.block_size = 1024
 
     # Use the attention function you implemented in the last part
-    attention_config = {
-        'attention_init': infer_from_name(args.m, ['nn.Linear', 'orthogonal', 'identity_bias']),
-        'sim_method': infer_from_name(args.m, ['dot_prod', 'cosine', 'avg', 'l2', 'correlation']),
-        'shared_weights': infer_from_name(args.m, ['QK', 'QV', 'KV', 'QKV']),
-        'attention_pnl': infer_from_name(args.m, ['tanh', 'relu', 'sigmoid']),
+    attention_config = { # defaults
+        'attention_init': 'nn.Linear',
+        'sim_method': 'dot_prod',
+        'shared_weights': None,
+        'attention_pnl': None,
     }
+    attention_init = infer_from_name(args.m, ['nn.Linear', 'orthogonal', 'identity_bias'])
+    sim_method = infer_from_name(args.m, ['dot_prod', 'cosine', 'avg', 'l2', 'correlation'])
+    shared_weights =  infer_from_name(args.m, ['QK', 'QV', 'KV', 'QKV'])
+    attention_pnl =  infer_from_name(args.m, ['tanh', 'relu', 'sigmoid'])
+    if attention_init: attention_config['attention_init'] = attention_init
+    if sim_method: attention_config['sim_method'] = sim_method
+    if shared_weights: attention_config['shared_weights'] = shared_weights
+    if attention_pnl: attention_config['attention_pnl'] = attention_pnl
     model_config.attn_init_fn = lambda n_embed: init_qkv_proj(n_embed, attention_config) # we implemented this for you
     model_config.attn_fn = lambda Q, K, V, n_heads, causal: self_attention(Q, K, V, n_heads=n_heads, causal=causal, config=attention_config) # you implemented this
 
@@ -150,7 +159,10 @@ def main(args):
             exit(1)
 
     model_config.num_classes = num_classes
-    model_config.model_type = infer_from_name(args.m, ['gpt-mini', 'gpt-micro', 'gpt-nano'])
+    model_type = infer_from_name(args.m, ['gpt-mini', 'gpt-micro', 'gpt-nano'])
+    if model_type is None:
+        model_type = 'gpt-nano'
+    model_config.model_type = model_type
 
     model = GPT(model_config)
     model.load_state_dict(torch.load(args.m, map_location=DEVICE))
