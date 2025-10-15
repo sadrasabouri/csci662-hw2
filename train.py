@@ -32,6 +32,7 @@ def get_arguments():
     parser.add_argument("-b", help="number of batch size to use for training", type=int, default=32)
     parser.add_argument("-n", help="number of training epochs to run", type=int, default=1)
     parser.add_argument("-lr", help="learning rate to use for training", type=float, default=5e-4)
+    parser.add_argument("--model_type", help="the model type used", type=str, default='gpt-nano')
 
     # attention improvement arguments - step 4
     parser.add_argument("--attention_init", help="Q, K, V matrices initialization methods (nn.Linear, orthogonal, identity_bias)", type=str, default='nn.Linear')
@@ -97,7 +98,7 @@ if __name__ == "__main__":
     # This configuration is the very small 'gpt-nano' defined in minGPT. we'd use a
     # bigger model like 'gpt2' but it would take a very long time to train :(
     # See model.py for configurations of other models
-    model_config.model_type = 'gpt-nano'
+    model_config.model_type = args.model_type
     # 'gpt-nano' equivalent to:
     # model_config.n_layer = 3
     # model_config.n_head = 3
