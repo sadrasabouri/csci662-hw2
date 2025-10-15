@@ -36,7 +36,8 @@ def get_arguments():
 
     # attention improvement arguments - step 4
     parser.add_argument("--attention_init", help="Q, K, V matrices initialization methods (nn.Linear, orthogonal, identity_bias)", type=str, default='nn.Linear')
-    parser.add_argument("--attention_sm", help="Similarity method for attention mechanism (dot_prod, cosine, avg, l2, correlation)", type=str, default='dot_prod')
+    parser.add_argument("--attention_sm", help="similarity method for attention mechanism (dot_prod, cosine, avg, l2, correlation)", type=str, default='dot_prod')
+    parser.add_argument("--attention_sw", help="attention projection sharing methods (QK, QV, KV, QKV)", type=str, default=None)
 
     return parser.parse_args()
 
@@ -116,6 +117,7 @@ if __name__ == "__main__":
     attention_config = {
         'attention_init': args.attention_init,
         'sim_method': args.attention_sm,
+        'shared_weights': args.attention_sw,
     }
     model_config.attn_fn = lambda Q, K, V, n_heads, causal: self_attention(Q, K, V, n_heads=n_heads, causal=causal, config=attention_config) # you implemented this
 

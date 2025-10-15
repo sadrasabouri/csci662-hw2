@@ -101,6 +101,15 @@ def self_attention(Q, K, V, n_heads=1, causal=True, config:dict=None):
     Q = Q.to(DEVICE)
     K = K.to(DEVICE)
     V = V.to(DEVICE)
+    if config["shared_weights"] == 'QK':
+        Q = K
+    elif config["shared_weights"] == 'QV':
+        Q = V
+    elif config["shared_weights"] == 'KV':
+        K = V
+    elif config["shared_weights"] == 'QKV':
+        Q = K
+        V = Q
 
     # Step 3 -- split heads.
     if n_heads > 1:
