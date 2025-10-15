@@ -77,7 +77,8 @@ class Trainer:
                 "input_file": config.get("input_file"),
                 "validation_interval": config.get("validation_interval"),
                 "n_epochs": config.get("n_epochs"),
-                "pretrained_model": config.get("pretrained_model")
+                "pretrained_model": config.get("pretrained_model"),
+                "attention_config": config.get("attention_config")
             },
             name=wandb_report_name
         )

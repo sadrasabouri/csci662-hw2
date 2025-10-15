@@ -36,6 +36,7 @@ def get_arguments():
 
     # attention improvement arguments - step 4
     parser.add_argument("--attention_init", help="Q, K, V matrices initialization methods (nn.Linear, orthogonal, identity_bias)", type=str, default='nn.Linear')
+    parser.add_argument("--attention_sm", help="Similarity method for attention mechanism (dot_prod, cosine, avg, l2, correlation)", type=str, default='dot_prod')
 
     return parser.parse_args()
 
@@ -112,7 +113,11 @@ if __name__ == "__main__":
 
     # Use the attention function you implemented in the last part
     model_config.attn_init_fn = lambda n_embed: init_qkv_proj(n_embed, args.attention_init) # we implemented this for you
-    model_config.attn_fn = self_attention # you implemented this
+    attention_config = {
+        'attention_init': args.attention_init,
+        'sim_method': args.attention_sm,
+    }
+    model_config.attn_fn = lambda Q, K, V, n_heads, causal: self_attention(Q, K, V, n_heads=n_heads, causal=causal, config=attention_config) # you implemented this
 
     # handle num classes for classification
     # will init a new classification head if the pretrained model doesn't have one
@@ -126,6 +131,7 @@ if __name__ == "__main__":
     train_config = Trainer.get_default_config()
     train_config.device = DEVICE
     train_config.num_workers = 2
+    train_config.attention_config = attention_config
 
     # We didn't tune the hyperparameters at all, please experiment with these!
     train_config.learning_rate = args.lr

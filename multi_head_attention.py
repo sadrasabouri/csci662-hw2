@@ -86,14 +86,12 @@ def init_qkv_proj(n_embd:int, initialization_mode:str="nn.Linear"):
 
     return (q_proj, k_proj, v_proj)
 
-def self_attention(Q, K, V, n_heads=1, causal=True):
+def self_attention(Q, K, V, n_heads=1, causal=True, config:dict=None):
     """
     Self-attention block.
 
     Note: You will keep coming back to this function and fill in more of it
     after completing steps 1-3! Make sure that once you're done, all the tests should pass.
-
-    TODO: fill in the missing blocks of this function
 
     :return: A tensor containing the result of the self-attention operation.
     """
@@ -111,7 +109,7 @@ def self_attention(Q, K, V, n_heads=1, causal=True):
 
     # Step 1 -- calculate raw attetion.
     # Hint: you need two lines here.
-    A = pairwise_similarities(Q, K)
+    A = pairwise_similarities(Q, K, config['sim_method'])
     A = attn_scaled(A, n_embd, n_heads)
 
     # Step 2 -- create and apply the causal mask to attention.
@@ -135,13 +133,31 @@ def self_attention(Q, K, V, n_heads=1, causal=True):
 # Step 1: Implement the core components of attention.
 
 
-def pairwise_similarities(Q, K):
+def pairwise_similarities(Q, K, method:str="dot_prod"):
     """
     Dot product attention is computed via the dot product between each query and each key.
     :return: The raw attention scores, A = QK^T.
     """
-    K_T = torch.transpose(K, -2, -1) # swap n_tok and n_embd only
-    return Q @ K_T
+    if method == "cosine":
+        Q_norm = F.normalize(Q, p=2, dim=-1)
+        K_norm = F.normalize(K, p=2, dim=-1)
+        K_T = torch.transpose(K_norm, -2, -1)
+        return Q_norm @ K_T
+    elif method == "avg":
+        return (Q + K) / 2
+    elif method == "l2":
+        return (Q - K) ** 2
+    elif method == "correlation":
+        Q_centered = Q - Q.mean(dim=-1, keepdim=True)
+        K_centered = K - K.mean(dim=-1, keepdim=True)
+        Q_norm = F.normalize(Q_centered, p=2, dim=-1)
+        K_norm = F.normalize(K_centered, p=2, dim=-1)
+        K_T = torch.transpose(K_norm, -2, -1)
+        return Q_norm @ K_T
+    else: # method == "dot_prod":
+        K_T = torch.transpose(K, -2, -1) # swap n_tok and n_embd only
+        return Q @ K_T
+
 
 def attn_scaled(A, n_embd:float, n_heads:float):
     """
