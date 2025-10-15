@@ -11,6 +11,12 @@ else:
     DEVICE = "cpu"
 print(f"PyTorch version: {torch.__version__} on {DEVICE}")
 
+name_to_nn = {
+    'tanh': nn.Tanh,
+    'relu': nn.ReLU,
+    'sigmoid': nn.Sigmoid
+}
+
 # wrapper for Torch attention implementation - do not modify
 def MHA_wrapper(query, key, value, n_heads=1, causal=False):
     """
@@ -63,7 +69,12 @@ def init_qkv_proj(n_embd:int, config:dict=None):
     :return: A tuple of length 3 containing the projections for Q, K, V.
     """
     initialization_mode = config['attention_init']
-    q_proj, k_proj, v_proj = nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd) 
+    projection_non_line = config['attention_pnl']
+    q_proj, k_proj, v_proj = nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd), nn.Linear(n_embd, n_embd)
+    if projection_non_line: # add the nonlinearity to it
+        q_proj = nn.Sequential(q_proj, name_to_nn[projection_non_line]())
+        k_proj = nn.Sequential(k_proj, name_to_nn[projection_non_line]())
+        v_proj = nn.Sequential(v_proj, name_to_nn[projection_non_line]())
     if initialization_mode == "orthogonal":
         nn.init.orthogonal_(q_proj.weight)
         nn.init.orthogonal_(k_proj.weight)

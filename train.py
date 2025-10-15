@@ -38,6 +38,7 @@ def get_arguments():
     parser.add_argument("--attention_init", help="Q, K, V matrices initialization methods (nn.Linear, orthogonal, identity_bias)", type=str, default='nn.Linear')
     parser.add_argument("--attention_sm", help="similarity method for attention mechanism (dot_prod, cosine, avg, l2, correlation)", type=str, default='dot_prod')
     parser.add_argument("--attention_sw", help="attention projection sharing methods (QK, QV, KV, QKV)", type=str, default=None)
+    parser.add_argument("--attention_pnl", help="attention projection nonlinearity (tanh, relu, sigmoid)", type=str, default=None)
 
     return parser.parse_args()
 
@@ -117,6 +118,7 @@ if __name__ == "__main__":
         'attention_init': args.attention_init,
         'sim_method': args.attention_sm,
         'shared_weights': args.attention_sw,
+        'attention_pnl': args.attention_pnl,
     }
     model_config.attn_init_fn = lambda n_embed: init_qkv_proj(n_embed, attention_config) # we implemented this for you
     model_config.attn_fn = lambda Q, K, V, n_heads, causal: self_attention(Q, K, V, n_heads=n_heads, causal=causal, config=attention_config) # you implemented this
