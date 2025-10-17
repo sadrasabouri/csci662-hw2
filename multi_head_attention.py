@@ -98,7 +98,7 @@ def init_qkv_proj(n_embd:int, config:dict=None):
 
     return (q_proj, k_proj, v_proj)
 
-def self_attention(Q, K, V, n_heads=1, causal=True, config:dict=None):
+def self_attention(Q, K, V, n_heads=1, causal=True, config:dict={}):
     """
     Self-attention block.
 
@@ -113,13 +113,14 @@ def self_attention(Q, K, V, n_heads=1, causal=True, config:dict=None):
     Q = Q.to(DEVICE)
     K = K.to(DEVICE)
     V = V.to(DEVICE)
-    if config["shared_weights"] == 'QK':
+    shared_weights = config.get("shared_weights", None)
+    if shared_weights == 'QK':
         Q = K
-    elif config["shared_weights"] == 'QV':
+    elif shared_weights == 'QV':
         Q = V
-    elif config["shared_weights"] == 'KV':
+    elif shared_weights == 'KV':
         K = V
-    elif config["shared_weights"] == 'QKV':
+    elif shared_weights == 'QKV':
         Q = K
         V = Q
 
@@ -130,7 +131,8 @@ def self_attention(Q, K, V, n_heads=1, causal=True, config:dict=None):
 
     # Step 1 -- calculate raw attetion.
     # Hint: you need two lines here.
-    A = pairwise_similarities(Q, K, config['sim_method'])
+    sim_method = config.get("sim_method", "dot_prod")
+    A = pairwise_similarities(Q, K, sim_method)
     A = attn_scaled(A, n_embd, n_heads)
 
     # Step 2 -- create and apply the causal mask to attention.
